@@ -1,5 +1,5 @@
 ---
-- name: Setup an EC2 instance
+- name: Create new AWS EC2 service
   hosts: all
   connection: local
   vars:
@@ -36,10 +36,10 @@
           attribute: service_id
       register: service_id
 
-    - name: Get a VMDB object
+    - name: Get the Service object
       manageiq_vmdb:
         href: "services/{{ service_id.value }}"
-      register: vmdb_object
+      register: service_object
 
     - name: Create EC2 Instance
       ec2:
@@ -55,9 +55,29 @@
         assign_public_ip: yes
       register: ec2
 
+    - name: Refresh AWS provider
+      manageiq_vmdb:
+        href: "href_slug::providers/{{ provider_id }}"
+        action: refresh
+      register: refresh_result
+
+    - debug: var=refresh_result
+    - debug: var=refresh_result.value.task_id
+
+    - name: Wait for the refresh to complete
+      manageiq_vmdb:
+        href: "href_slug::tasks/{{ refresh_result.value.task_id }}"
+      register: task_result
+      until: task_result.state == 'Finished' or task_result.status == 'Error'
+      failed_when: task_result.status == 'Error'
+      retries: 100
+      delay: 60
+
+    - debug: var=task_result
+
     - name: Link the instance to its service
       manageiq_vmdb:
-        vmdb: "{{ vmdb_object }}"
+        vmdb: "{{ service_object }}"
         action: add_provider_vms
         data:
           uid_ems:
