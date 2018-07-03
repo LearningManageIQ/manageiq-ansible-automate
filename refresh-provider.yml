@@ -4,8 +4,9 @@
   connection: local
   
   vars:
-    - auto_commit: true
-    - manageiq_validate_certs: false
+    auto_commit: true
+    manageiq_validate_certs: false
+    provider_id: 4
       
   roles:
   - syncrou.manageiq-automate
@@ -14,7 +15,8 @@
   tasks:
     - name: Refresh provider
       manageiq_vmdb:
-        href: "href_slug::providers/4"
+        # href: "href_slug::providers/4"
+        href: "href_slug::providers/{{ provider_id }}"
         action: refresh
       register: refresh_result
 
