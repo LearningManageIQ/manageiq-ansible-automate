@@ -1,0 +1,17 @@
+---
+- name: Refresh provider 
+  hosts: localhost
+  connection: local
+  
+  vars:
+    - auto_commit: true
+    - manageiq_validate_certs: false
+      
+  roles:
+    - syncrou.manageiq-automate
+
+  tasks:
+    - name: Refresh provider
+      manageiq_vmdb:
+        href: "href_slug::providers/4"
+        action: refresh
