@@ -25,9 +25,9 @@
       manageiq_vmdb:
         href: "href_slug::tasks/{{ refresh_result.value.task_id }}"
       register: task_result
-      until: task_result.value.state == 'Finished' or task_result.value.status == 'Error'
-      failed_when: task_result.value.status == 'Error'
-      retries: 100
-      delay: 60
+      # until: task_result.value.state == 'Finished' or task_result.value.status == 'Error'
+      # failed_when: task_result.value.status == 'Error'
+      # retries: 100
+      # delay: 60
 
     - debug: var=task_result
