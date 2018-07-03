@@ -15,8 +15,8 @@
   tasks:
     - name: Refresh provider
       manageiq_vmdb:
-        href: "href_slug::providers/4"
-        # href: "href_slug::providers/{{ provider_id }}"
+        # href: "href_slug::providers/4"
+        href: "href_slug::providers/{{ provider_id }}"
         action: refresh
       register: refresh_result
 
