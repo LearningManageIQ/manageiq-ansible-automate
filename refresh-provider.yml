@@ -17,5 +17,13 @@
         href: "href_slug::providers/4"
         action: refresh
       register: output
-      
+
     - debug: var=output
+    - debug: var=output.value.task_id
+
+    - name: Wait for the refresh to end
+      manageiq_vmdb:
+        href: "href_slug::tasks/{{ output.value.task_id }}"
+      register: task_result
+
+    - debug: var=task_result
