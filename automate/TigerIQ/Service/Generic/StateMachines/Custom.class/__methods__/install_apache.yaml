@@ -1,0 +1,23 @@
+---
+object_type: method
+version: 1.0
+object:
+  attributes:
+    name: install_apache
+    display_name: ''
+    description: 
+    scope: instance
+    language: ruby
+    location: playbook
+    data: 
+    options:
+      :repository_id: '2'
+      :playbook_id: '10'
+      :credential_id: '21'
+      :vault_credential_id: ''
+      :verbosity: '0'
+      :execution_ttl: ''
+      :hosts: "${/#public_ip}"
+      :log_output: on_error
+      :become_enabled: false
+  inputs: []

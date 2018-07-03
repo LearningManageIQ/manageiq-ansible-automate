@@ -1,0 +1,23 @@
+---
+object_type: method
+version: 1.0
+object:
+  attributes:
+    name: get_vmdb_object
+    display_name: ''
+    description: 
+    scope: instance
+    language: ruby
+    location: playbook
+    data: 
+    options:
+      :repository_id: '3'
+      :playbook_id: '24'
+      :credential_id: '18'
+      :vault_credential_id: ''
+      :verbosity: '0'
+      :execution_ttl: ''
+      :hosts: localhost
+      :log_output: on_error
+      :become_enabled: false
+  inputs: []

@@ -1,0 +1,43 @@
+---
+object_type: method
+version: 1.0
+object:
+  attributes:
+    name: refresh_provider
+    display_name: ''
+    description: 
+    scope: instance
+    language: ruby
+    location: playbook
+    data: 
+    options:
+      :repository_id: '3'
+      :playbook_id: '25'
+      :credential_id: '18'
+      :vault_credential_id: ''
+      :verbosity: '0'
+      :execution_ttl: ''
+      :hosts: localhost
+      :log_output: on_error
+      :become_enabled: false
+  inputs:
+  - field:
+      aetype: 
+      name: provider_id
+      display_name: 
+      datatype: string
+      priority: 0
+      owner: 
+      default_value: "${/#dialog_provider_id}"
+      substitute: true
+      message: create
+      visibility: 
+      collect: 
+      scope: 
+      description: 
+      condition: 
+      on_entry: 
+      on_exit: 
+      on_error: 
+      max_retries: 
+      max_time: 
