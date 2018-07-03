@@ -16,14 +16,18 @@
       manageiq_vmdb:
         href: "href_slug::providers/4"
         action: refresh
-      register: output
+      register: refresh_result
 
-    - debug: var=output
-    - debug: var=output.value.task_id
+    - debug: var=refresh_result
+    - debug: var=refresh_result.value.task_id
 
     - name: Wait for the refresh to end
       manageiq_vmdb:
-        href: "href_slug::tasks/{{ output.value.task_id }}"
+        href: "href_slug::tasks/{{ refresh_result.value.task_id }}"
       register: task_result
+      until: task_result.value.state == 'Finished' or task_result.value.status == 'Error'
+      failed_when: task_result.value.status == 'Error'
+      retries: "{{max_retries}}"
+      delay: "{{retry_interval}}"
 
     - debug: var=task_result
