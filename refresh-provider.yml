@@ -16,3 +16,6 @@
       manageiq_vmdb:
         href: "href_slug::providers/4"
         action: refresh
+      register: output
+      
+    - debug: var=output
