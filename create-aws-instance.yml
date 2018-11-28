@@ -18,82 +18,83 @@
   - syncrou.manageiq-vmdb
   
   tasks:
-    - name: Set the job ID back into $evm.root
-      manageiq_automate:
-        workspace: "{{ workspace }}"
-        set_attribute:
-          object: root
-          attribute: tower_job_id
-          value:  "{{ tower_job_id }}"
+    - block:
+        - name: Get service_id
+          manageiq_automate:
+            workspace: "{{ workspace }}"
+            get_attribute:
+              object: root
+              attribute: service_id
+          register: service_id
 
-    - name: Get service_id
-      manageiq_automate:
-        workspace: "{{ workspace }}"
-        get_attribute:
-          object: root
-          attribute: service_id
-      register: service_id
+        - name: Get the Service object
+          manageiq_vmdb:
+            href: "services/{{ service_id.value }}"
+          register: service_object
 
-    - name: Get the Service object
-      manageiq_vmdb:
-        href: "services/{{ service_id.value }}"
-      register: service_object
+        - name: Create EC2 Instance
+          ec2:
+            key_name: "{{ key_name }}"
+            instance_tags: {Name: "{{ vm_name }}"}
+            group_id: "{{ security_group }}"
+            instance_type: "{{ instance_type }}"
+            region: "{{ region }}"
+            image: "{{ image }}"
+            wait: yes
+            count: 1
+            vpc_subnet_id: "{{ subnet }}"
+            assign_public_ip: yes
+          register: ec2
 
-    - name: Create EC2 Instance
-      ec2:
-        key_name: "{{ key_name }}"
-        instance_tags: {Name: "{{ vm_name }}"}
-        group_id: "{{ security_group }}"
-        instance_type: "{{ instance_type }}"
-        region: "{{ region }}"
-        image: "{{ image }}"
-        wait: yes
-        count: 1
-        vpc_subnet_id: "{{ subnet }}"
-        assign_public_ip: yes
-      register: ec2
+        - name: Refresh AWS provider
+          manageiq_vmdb:
+            href: "href_slug::providers/{{ provider_id }}"
+            action: refresh
+          register: refresh_result
 
-    - name: Refresh AWS provider
-      manageiq_vmdb:
-        href: "href_slug::providers/{{ provider_id }}"
-        action: refresh
-      register: refresh_result
+        - debug: var=refresh_result
+        - debug: var=refresh_result.value.task_id
 
-    - debug: var=refresh_result
-    - debug: var=refresh_result.value.task_id
+        - name: Wait for the refresh to complete
+          manageiq_vmdb:
+            href: "href_slug::tasks/{{ refresh_result.value.task_id }}"
+          register: task_result
+          until: task_result.state == 'Finished' or task_result.status == 'Error'
+          failed_when: task_result.status == 'Error'
+          retries: 100
+          delay: 60
 
-    - name: Wait for the refresh to complete
-      manageiq_vmdb:
-        href: "href_slug::tasks/{{ refresh_result.value.task_id }}"
-      register: task_result
-      until: task_result.state == 'Finished' or task_result.status == 'Error'
-      failed_when: task_result.status == 'Error'
-      retries: 100
-      delay: 60
+        - debug: var=task_result
 
-    - debug: var=task_result
+        - name: Link the instance to its service
+          manageiq_vmdb:
+            vmdb: "{{ service_object }}"
+            action: add_provider_vms
+            data:
+              uid_ems:
+                - "{{ ec2.instances[0].id }}"
+              provider:
+                id: "{{ provider_id }}"
 
-    - name: Link the instance to its service
-      manageiq_vmdb:
-        vmdb: "{{ service_object }}"
-        action: add_provider_vms
-        data:
-          uid_ems:
-            - "{{ ec2.instances[0].id }}"
-          provider:
-            id: "{{ provider_id }}"
+        - name: Wait for SSH to start
+          wait_for:
+            host: "{{ ec2.instances[0].public_ip }}"
+            port: 22
+            timeout: 300
+          delegate_to: localhost
 
-    - name: Wait for SSH to start
-      wait_for:
-        host: "{{ ec2.instances[0].public_ip }}"
-        port: 22
-        timeout: 300
-      delegate_to: localhost
-
-    - name: Save public_ip in $evm.root
-      manageiq_automate:
-        workspace: "{{ workspace }}"
-        set_attribute:
-          object: root
-          attribute: public_ip
-          value:  "{{ ec2.instances[0].public_ip }}"
+        - name: Save public_ip in $evm.root
+          manageiq_automate:
+            workspace: "{{ workspace }}"
+            set_attribute:
+              object: root
+              attribute: public_ip
+              value:  "{{ ec2.instances[0].public_ip }}"
+      always:
+        - name: Set the job ID back into $evm.root
+          manageiq_automate:
+            workspace: "{{ workspace }}"
+            set_attribute:
+              object: root
+              attribute: tower_job_id
+              value:  "{{ tower_job_id }}"
